@@ -1,5 +1,5 @@
 # Ninho Guaipeca
-Plataforma para tutores de pets, composta por um app Android e backend em microsserviços hospedado na AWS.
+Plataforma para tutores de pets, composta por um app Android e backend monolito hospedado na AWS.
 
 O projeto tem duas frentes:
 * **Fórum:** tutores podem criar tópicos, interagir e tirar dúvidas entre si;
@@ -32,8 +32,8 @@ Daí surge o **Ninho Guaipeca**, um aplicativo que reúne tudo o que os tutores 
 
 ## Decisões técnicas
 * **Banco relacional com PostGIS:** os dados têm muitos relacionamentos (usuários, pets, tópicos, comentários, votos, avaliações), e o PostGIS faz a busca por distância direto no banco, com índice espacial.
-* **Um schema por microsserviço:** os três serviços usam a mesma instância do RDS, mas cada um é dono do seu schema. Referências entre serviços (como autor de um tópico) são lógicas, sem chave estrangeira física.
-* **UUID como identificador:** permite que um serviço referencie registros de outro sem depender de sequência do banco e evita expor IDs sequenciais nas URLs.
+* **Monolito modular:** o backend é uma única aplicação Spring Boot, organizada em módulos por domínio (usuários, fórum e bem-estar). Cada módulo tem suas próprias camadas e só se comunica com outro pela camada de serviço. Como os domínios dependem o tempo todo do usuário e do pet, separá-los em microsserviços traria chamadas de rede e custo de infraestrutura sem ganho real para o tamanho do projeto. As fronteiras entre os módulos permitem extrair um serviço no futuro, caso necessário.
+* **UUID como identificador:** evita expor IDs sequenciais nas URLs, o que impede que alguém deduza a quantidade de registros, ou percorra perfis alterando o número na requisição.
 * **Nota média desnormalizada:** a média e o total de avaliações ficam no próprio estabelecimento, atualizados por trigger, para que a listagem filtre por nota sem JOIN e GROUP BY.
 * **Localização aproximada:** o app usa a permissão de localização aproximada, suficiente para a busca por proximidade e menos invasiva para o usuário.
 * **Moderação de texto por lista de palavras:** a detecção de toxicidade do Amazon Comprehend só suporta inglês, então o texto em português é moderado por uma listagem de palavras proibidas e denúncias da comunidade.
